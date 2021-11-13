@@ -36,41 +36,41 @@ app.post('/users', (request, response) => {
 
    //checking if username already exist
    if(findUserByUsername(username))
-      return response.status(400).json({ errorMessage: 'Nome de usuário já existe, tente outro!' })
+      return response.status(400).json({ error: 'Nome de usuário já existe, tente outro!' })
 
    //creating a new user
-   users.push({
+   const newUser = {
       id: uuid(),
       name,
       username,
       todos: []
-   })
+   }
+   users.push(newUser)
 
-   return response.status(201).json({ 
-      successMessage: `Parabéns, ${name}! Seu usuário, ${username}, foi criado com sucesso!` 
-   })
+   return response.status(201).json(newUser)
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
    const userTodos = request.todos
    
-   return response.status(200).json({todos: userTodos})
+   return response.status(200).json(userTodos)
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
-   const {title, deadline} = request.body.newTodo
+   const {title, deadline} = request.body
 
    const userTodos = request.todos
-   
-   userTodos.push({ 
-	   id: uuid(),
-	   title,
-	   done: false, 
-	   deadline: new Date(deadline), 
-	   created_at: new Date()
-   })
 
-   return response.status(201).json({successMessage: 'Todo criada com sucesso!'})
+   const newTodo = {
+      id: uuid(),
+      title,
+      done: false,
+      deadline: new Date(deadline),
+      created_at: new Date()
+   }
+   userTodos.push(newTodo)
+
+   return response.status(201).json(newTodo)
 });
 
 app.post('/todoList', checksExistsUserAccount, (req, res) => {
@@ -93,17 +93,17 @@ app.post('/todoList', checksExistsUserAccount, (req, res) => {
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
    const { id } = request.params
-   const {newTitle, newDeadline} = request.body
+   const {title: newTitle, deadline: newDeadline} = request.body
 
    const userTodos = request.todos
 
    let userTodoToUpdate = userTodos.find(userTodo => userTodo.id === id)
-   if(userTodoToUpdate) return response.status(404).json({errorMessage: 'Todo não encontrada!'})
+   if(!userTodoToUpdate) return response.status(404).json({error: 'Todo não encontrada!'})
 
    userTodoToUpdate.title = newTitle
    userTodoToUpdate.deadline = new Date(newDeadline)
 
-   return response.status(200).json({ successMessage: 'Todo atualizada com successo!' })
+   return response.status(200).json(userTodoToUpdate)
 
 });
 
@@ -113,11 +113,11 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
    const userTodos = request.todos
 
    let userTodoToUpdate = userTodos.find(userTodo => userTodo.id === id)
-   if(userTodoToUpdate) return response.status(404).json({errorMessage: 'Todo não encontrada!'})
+   if(!userTodoToUpdate) return response.status(404).json({error: 'Todo não encontrada!'})
 
    userTodoToUpdate.done = true
 
-   return response.status(200).json({ successMessage: 'Todo atualizada para concluida!' })
+   return response.status(200).json(userTodoToUpdate)
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
@@ -126,13 +126,13 @@ app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
    const userTodos = request.todos
 
    let userTodoToDelete = userTodos.find(userTodo => userTodo.id === id)
-   if(userTodoToDelete) return response.status(404).json({errorMessage: 'Todo não encontrada!'})
+   console.log(userTodoToDelete)
+   if(!userTodoToDelete) return response.status(404).json({error: 'Todo não encontrada!'})
 
    const index = userTodos.indexOf(userTodoToDelete)
-   if(index > -1) userTodos.splice(index, 1)
-   else return response.status(404).json({errorMessage: 'Todo não encontrada!'})
+   userTodos.splice(index, 1)
 
-   return response.status(200).json({ successMessage: 'Todo deletada com sucesso!' })
+   return response.status(204).json({ successMessage: 'Todo deletada com sucesso!' })
 });
 
 module.exports = app;
